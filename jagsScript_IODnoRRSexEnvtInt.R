@@ -24,7 +24,7 @@ library(coda)
 
 ###### if on computer ######
 if(exists("input.file") == FALSE) {
-    data <- read.table("bugsdata2.txt")
+    data <- read.table("bugsdata5.txt")
     no_of_cores <- 3
 }
 ###### data processing ######
@@ -35,16 +35,16 @@ I <-is.na(data$ids)|
   is.na(data$CycleBand)|
   is.na(data$Rsnum)|
   is.na(data$RSplus1num)|
-  is.na(data$CyclePairBand)|
+##  is.na(data$CyclePairBand)|
   is.na(data$Stade)|
   is.na(data$ntrajet)|
   is.na(data$Tripdur)|
   is.na(data$Age)|
   is.na(data$IODAnnual)| 
   is.na(data$SOIAnnual)|  
-  is.na(data$AAOAnnual)|  
-  is.na(data$ONIAnnual)
-  
+  is.na(data$AAOAnnual) ##|  
+##  is.na(data$ONIAnnual)
+ 
 data <- data[!I,]
 
 ###### Not needed ######
@@ -56,13 +56,13 @@ data <- data[!I,]
 ######
 
 ### scaling and centering
-data$ntrajet<- as.numeric(scale(data$ntrajet))
-data$Tripdur<- as.numeric(scale(sqrt(data$Tripdur)))
+## data$ntrajet<- as.numeric(scale(data$ntrajet))
+data$Tripdur <- as.numeric(scale(sqrt(data$Tripdur)))
 data$Age<- as.numeric(scale(data$Age))
 data$IODAnnual<- as.numeric(scale(data$IODAnnual))
 data$SOIAnnual<- as.numeric(scale(data$SOIAnnual))
 data$AAOAnnual<- as.numeric(scale(data$AAOAnnual))
-data$ONIAnnual<- as.numeric(scale(data$ONIAnnual))
+##data$ONIAnnual<- as.numeric(scale(data$ONIAnnual))
 
 db <- data.frame(Cycle=sort(unique(data$Cycle)),Cycle.n=1:length(unique(data$Cycle)))
 data$Cycle.n <- db$Cycle.n[match(data$Cycle,db$Cycle)]
@@ -72,7 +72,7 @@ data$PairBand <- substring(data$CyclePairBand,5)
 
 ##### creating BUGS datalist #####
 BUGS6.data <- list(n = nrow(data), #121
-                   n.Pairs = length(unique(data$PairBand)),  #n.pair
+                   n.Pairs = length(unique(data$PairID)),  #n.pair
                    n.Cycles = length(unique(data$Cycle)), #n.cycle
                    n.ids = length(unique(data$ids)),
                    y = data$Tripdur,
@@ -88,7 +88,7 @@ BUGS6.data <- list(n = nrow(data), #121
                    Preponte = ifelse(data$Stade=="PRE-PONTE",1,0),
                    Incubation = ifelse(data$Stade=="INCUBATION",1,0),
                    id = as.numeric(droplevels(data$ids)),
-                   PairBand = as.numeric(as.factor(data$PairBand)),
+                   PairBand = as.numeric(droplevels(as.factor(data$PairID))),
                    Cycle = data$Cycle.n, 
                    Age = data$Age,
                    mat.id = diag(2),
@@ -125,9 +125,9 @@ BUGS6.inits.jags <- function() {list(beta = rnorm(nbeta), #fixed
 
 ##### chain parameters #####
 n.c.jags <- no_of_cores # ICS set number of chains = number of cores
-n.a.jags <- 1000 # number of adaptive iterations
-n.b.jags <- 1000 # number of burnin
-n.t.jags <- 1 # thining interval
+n.a.jags <- 5000 # number of adaptive iterations
+n.b.jags <- 20000 # number of burnin
+n.t.jags <- 100 # thining interval
 n.s.jags <- 1000  # number of samples (i.e. total number of iterations is nb.samples * thinning interval)
 
 
