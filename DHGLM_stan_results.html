@@ -170,13 +170,14 @@ data$Cycle.n &lt;- db$Cycle.n[match(data$Cycle,db$Cycle)]</code></pre>
 </div>
 <div id="full-model-including-interaction-with-age" class="section level1">
 <h1>Full model including interaction with age</h1>
+<p>Load the model to check convergence and results</p>
 <pre class="r"><code>load(&quot;dhglm_Afull.rda&quot;)
 Xm.Afull &lt;- model.matrix(~ 1 + (Age + Sexe + Stade) * IODAnnual, data)
 Xv.Afull &lt;- model.matrix(~ 1 + (Age + Sexe + Stade) * IODAnnual, data)
 params &lt;- c(&quot;beta&quot;,&quot;gamma&quot;,&quot;sigma_id&quot;,&quot;sigma_yr&quot;,&quot;L_O_id&quot;,&quot;L_O_yr&quot;, &quot;Sigma_id&quot;,&quot;Sigma_yr&quot;,&quot;Omega_id[1,2]&quot;,&quot;Omega_yr[1,2]&quot;)
-params2 &lt;- c(&quot;beta&quot;,&quot;gamma&quot;, &quot;Sigma_id&quot;,&quot;Sigma_yr&quot;,&quot;Omega_id[1,2]&quot;,&quot;Omega_yr[1,2]&quot;)
-
-check_all_diagnostics(dh_Afull)</code></pre>
+params2 &lt;- c(&quot;beta&quot;,&quot;gamma&quot;, &quot;Sigma_id&quot;,&quot;Sigma_yr&quot;,&quot;Omega_id[1,2]&quot;,&quot;Omega_yr[1,2]&quot;)</code></pre>
+<p>Check converge and model mixing</p>
+<pre class="r"><code>check_all_diagnostics(dh_Afull)</code></pre>
 <pre><code>## [1] &quot;n_eff / iter looks reasonable for all parameters&quot;
 ## [1] &quot;Rhat for parameter L_O_id[1,1] is NaN!&quot;
 ## [1] &quot;Rhat for parameter L_O_id[1,2] is NaN!&quot;
@@ -189,6 +190,7 @@ check_all_diagnostics(dh_Afull)</code></pre>
 ## [1] &quot;  Try running with larger adapt_delta to remove the divergences&quot;
 ## [1] &quot;0 of 2000 iterations saturated the maximum tree depth of 10 (0%)&quot;
 ## [1] &quot;E-BFMI indicated no pathological behavior&quot;</code></pre>
+<p>Get the results and plot a few figures</p>
 <pre class="r"><code>results.Afull &lt;- summary(dh_Afull, pars = params2, probs = c(0.025, 0.5, 0.975))$summary
 rownames(results.Afull)[1:(ncol(Xm.Afull) + ncol(Xv.Afull))] &lt;-
     c(paste0(&quot;b_&quot;, colnames(Xm.Afull)),
@@ -237,13 +239,14 @@ print(results.Afull, digits = 2)</code></pre>
 </div>
 <div id="model-with-non-significant-interactions-removed-but-other-fixed-effects-kept-in" class="section level1">
 <h1>Model with non-significant interactions removed but other fixed effects kept in</h1>
+<p>Load the model to check convergence and results</p>
 <pre class="r"><code>load(&quot;dhglm_sig.rda&quot;)
 Xm.sig &lt;- model.matrix(~ 1 + Age + Sexe + Stade * IODAnnual, data)
 Xv.sig &lt;- model.matrix(~ 1 + Age + Sexe + Stade + IODAnnual, data)
 params &lt;- c(&quot;beta&quot;,&quot;gamma&quot;,&quot;sigma_id&quot;,&quot;sigma_yr&quot;,&quot;L_O_id&quot;,&quot;L_O_yr&quot;, &quot;Sigma_id&quot;,&quot;Sigma_yr&quot;,&quot;Omega_id[1,2]&quot;,&quot;Omega_yr[1,2]&quot;)
-params2 &lt;- c(&quot;beta&quot;,&quot;gamma&quot;, &quot;Sigma_id&quot;,&quot;Sigma_yr&quot;,&quot;Omega_id[1,2]&quot;,&quot;Omega_yr[1,2]&quot;)
-
-check_all_diagnostics(dh_sig)</code></pre>
+params2 &lt;- c(&quot;beta&quot;,&quot;gamma&quot;, &quot;Sigma_id&quot;,&quot;Sigma_yr&quot;,&quot;Omega_id[1,2]&quot;,&quot;Omega_yr[1,2]&quot;)</code></pre>
+<p>Check converge and model mixing</p>
+<pre class="r"><code>check_all_diagnostics(dh_sig)</code></pre>
 <pre><code>## [1] &quot;n_eff / iter looks reasonable for all parameters&quot;
 ## [1] &quot;Rhat for parameter L_O_id[1,1] is NaN!&quot;
 ## [1] &quot;Rhat for parameter L_O_id[1,2] is NaN!&quot;
@@ -256,6 +259,7 @@ check_all_diagnostics(dh_sig)</code></pre>
 ## [1] &quot;  Try running with larger adapt_delta to remove the divergences&quot;
 ## [1] &quot;0 of 2000 iterations saturated the maximum tree depth of 10 (0%)&quot;
 ## [1] &quot;E-BFMI indicated no pathological behavior&quot;</code></pre>
+<p>Get the results and plot a few figures</p>
 <pre class="r"><code>results.sig &lt;- summary(dh_sig, pars = params2, probs = c(0.025, 0.5, 0.975))$summary
 rownames(results.sig)[1:(ncol(Xm.sig)+ncol(Xv.sig))] &lt;-
     c(paste0(&quot;b_&quot;, colnames(Xm.sig)),

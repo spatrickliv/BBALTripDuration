@@ -64,7 +64,7 @@ data$Cycle.n <- db$Cycle.n[match(data$Cycle,db$Cycle)]
 ```
 
 # Full model including interaction with age
-
+Load the model to check convergence and results
 ```{r results_Afull}
 
 load("dhglm_Afull.rda")
@@ -72,8 +72,15 @@ Xm.Afull <- model.matrix(~ 1 + (Age + Sexe + Stade) * IODAnnual, data)
 Xv.Afull <- model.matrix(~ 1 + (Age + Sexe + Stade) * IODAnnual, data)
 params <- c("beta","gamma","sigma_id","sigma_yr","L_O_id","L_O_yr", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
 params2 <- c("beta","gamma", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
+```
 
+Check converge and model mixing
+```{r}
 check_all_diagnostics(dh_Afull)
+```
+
+Get the results and plot a few figures
+```{r}
 results.Afull <- summary(dh_Afull, pars = params2, probs = c(0.025, 0.5, 0.975))$summary
 rownames(results.Afull)[1:(ncol(Xm.Afull) + ncol(Xv.Afull))] <-
     c(paste0("b_", colnames(Xm.Afull)),
@@ -89,7 +96,7 @@ stan_trace(dh_Afull, pars = params) + ggtitle("Trace plot full model")
 
 #  Model with non-significant interactions removed but other fixed effects kept in
 
-
+Load the model to check convergence and results
 ```{r results_sig}
 
 load("dhglm_sig.rda")
@@ -98,7 +105,17 @@ Xv.sig <- model.matrix(~ 1 + Age + Sexe + Stade + IODAnnual, data)
 params <- c("beta","gamma","sigma_id","sigma_yr","L_O_id","L_O_yr", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
 params2 <- c("beta","gamma", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
 
+```
+
+Check converge and model mixing
+```{r}
+
 check_all_diagnostics(dh_sig)
+
+```
+
+Get the results and plot a few figures
+```{r}
 results.sig <- summary(dh_sig, pars = params2, probs = c(0.025, 0.5, 0.975))$summary
 rownames(results.sig)[1:(ncol(Xm.sig)+ncol(Xv.sig))] <-
     c(paste0("b_", colnames(Xm.sig)),
