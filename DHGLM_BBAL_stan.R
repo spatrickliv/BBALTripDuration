@@ -75,7 +75,7 @@ stan_plot(dh_full, show_density = TRUE, pars=params2) + ggtitle("Posterior distr
 stan_dens(dh_full, pars=params2) + ggtitle("Posterior distributions model QG")
 
 
-Xm.sig <- model.matrix(~ 1 +  Sexe + Stade * IODAnnual, data)
+Xm.sig <- model.matrix(~ 1 +  Age + Sexe + Stade * IODAnnual, data)
 Xv.sig <- model.matrix(~ 1 + Age + Sexe + Stade + IODAnnual, data)
 stan.data.sig <- mk.stan.data(Xm.sig, Xv.sig, data)
 
@@ -87,3 +87,31 @@ dh_sig <- stan(file="Stan_Model_nopair.stan",
                   chains = 5,
                 control = list(adapt_delta = 0.96))
 save(dh_sig,file="dhglm_sig.rda")
+
+
+Xm.Asig <- model.matrix(~ 1 +  Sexe + (Age + Stade) * IODAnnual, data)
+Xv.Asig <- model.matrix(~ 1 + Sexe + Stade + Age * IODAnnual, data)
+stan.data.Asig <- mk.stan.data(Xm.Asig, Xv.Asig, data)
+
+dh_Asig <- stan(file="Stan_Model_nopair.stan",
+                  data = stan.data.Asig,
+                  iter = 5000,
+                  warmup = 3000,
+                  thin = 5,
+                chains = 5,
+                fit=NA,
+                control = list(adapt_delta = 0.96))
+save(dh_Asig,file="dhglm_Asig.rda")
+
+Xm.Afull <- model.matrix(~ 1 + (Age + Sexe + Stade) * IODAnnual, data)
+Xv.Afull <- model.matrix(~ 1 + (Age + Sexe + Stade) * IODAnnual, data)
+stan.data.Afull <- mk.stan.data(Xm.Afull,Xv.Afull,data)
+
+dh_Afull <- stan(file="Stan_Model_nopair.stan",
+                  data = stan.data.Afull,
+                  iter = 5000,
+                  warmup = 3000,
+                  thin = 5,
+                  chains = 5,
+                control = list(adapt_delta = 0.96))
+save(dh_Afull,file="dhglm_Afull.rda")

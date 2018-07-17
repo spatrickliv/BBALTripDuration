@@ -14,6 +14,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options(width=1200)
 ```
 
 # Overview
@@ -31,6 +32,7 @@ Various libraries to be installed and loaded allowing data manipulation model fi
 library(rstan)
 library(ggplot2)
 library(bayesplot)
+source("stan_utility.R")
 ```
 
 #  Model
@@ -50,55 +52,54 @@ I <- is.na(data$ids) |
   is.na(data$Tripdur) |
   is.na(data$Age) |
   is.na(data$IODAnnual) 
- 
-data <- data[!I,]
-
+ data <- data[!I,]
 ### scaling and centering
 data$Tripdur <- as.numeric(scale(sqrt(data$Tripdur)))
 data$Age <- as.numeric(scale(data$Age))
 data$IODAnnual <- as.numeric(scale(data$IODAnnual))
 data$Stade <- relevel(data$Stade, ref = "INCUBATION")
-
 db <- data.frame(Cycle = sort(unique(data$Cycle)), Cycle.n = 1:length(unique(data$Cycle)))
 data$Cycle.n <- db$Cycle.n[match(data$Cycle,db$Cycle)]
 
 ```
 
+# Full model including interaction with age
 
+```{r results_Afull}
 
-```{r results_full}
-
-load("dhglm_full.rda")
-Xm.full <- model.matrix(~ 1 + Age + (Sexe + Stade) * IODAnnual, data)
-Xv.full <- model.matrix(~ 1 + Age + (Sexe + Stade) * IODAnnual, data)
+load("dhglm_Afull.rda")
+Xm.Afull <- model.matrix(~ 1 + (Age + Sexe + Stade) * IODAnnual, data)
+Xv.Afull <- model.matrix(~ 1 + (Age + Sexe + Stade) * IODAnnual, data)
 params <- c("beta","gamma","sigma_id","sigma_yr","L_O_id","L_O_yr", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
 params2 <- c("beta","gamma", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
 
-results.full <- summary(dh_full, pars = params, probs = c(0.025, 0.5, 0.975))$summary
-rownames(results.full)[1:(ncol(Xm.full)+ncol(Xv.full))] <-
-    c(paste0("b_", colnames(Xm.full)),
-      paste0("g_", colnames(Xv.full))
+check_all_diagnostics(dh_Afull)
+results.Afull <- summary(dh_Afull, pars = params2, probs = c(0.025, 0.5, 0.975))$summary
+rownames(results.Afull)[1:(ncol(Xm.Afull) + ncol(Xv.Afull))] <-
+    c(paste0("b_", colnames(Xm.Afull)),
+      paste0("g_", colnames(Xv.Afull))
       )
-print(results.full, digits = 2)
+print(results.Afull, digits = 2)
 
-stan_plot(dh_full, show_density = TRUE, pars=params2) + ggtitle("Posterior distributions full model")
-stan_dens(dh_full, pars=params2) + ggtitle("Posterior distributions full model")
-stan_trace(dh_full, pars = params) + ggtitle("Trace plot full model")
+stan_plot(dh_Afull, show_density = TRUE, pars=params2) + ggtitle("Posterior distributions full model")
+stan_dens(dh_Afull, pars=params2) + ggtitle("Posterior distributions full model")
+stan_trace(dh_Afull, pars = params) + ggtitle("Trace plot full model")
 
 ```
 
-#  Model with only significant effect
+#  Model with non-significant interactions removed but other fixed effects kept in
 
 
 ```{r results_sig}
 
 load("dhglm_sig.rda")
-Xm.sig <- model.matrix(~ 1 + Sexe + Stade * IODAnnual, data)
+Xm.sig <- model.matrix(~ 1 + Age + Sexe + Stade * IODAnnual, data)
 Xv.sig <- model.matrix(~ 1 + Age + Sexe + Stade + IODAnnual, data)
 params <- c("beta","gamma","sigma_id","sigma_yr","L_O_id","L_O_yr", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
 params2 <- c("beta","gamma", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
 
-results.sig <- summary(dh_sig, pars = params, probs = c(0.025, 0.5, 0.975))$summary
+check_all_diagnostics(dh_sig)
+results.sig <- summary(dh_sig, pars = params2, probs = c(0.025, 0.5, 0.975))$summary
 rownames(results.sig)[1:(ncol(Xm.sig)+ncol(Xv.sig))] <-
     c(paste0("b_", colnames(Xm.sig)),
       paste0("g_", colnames(Xv.sig))
