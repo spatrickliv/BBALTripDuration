@@ -68,7 +68,7 @@ db <- data.frame(Cycle=sort(unique(data$Cycle)),Cycle.n=1:length(unique(data$Cyc
 data$Cycle.n <- db$Cycle.n[match(data$Cycle,db$Cycle)]
 
 ### obtaining the Pairs (i.e. removing the year, first four characters, from CyclePairBand)
-data$PairBand <- substring(data$CyclePairBand,5)
+## data2$PairBand <- substring(data2$CyclePairBand,5)
 
 ##### creating BUGS datalist #####
 BUGS6.data <- list(n = nrow(data), #121
@@ -106,7 +106,7 @@ ngamma <- 6
 
 
 ##### parameters so save #####
-BUGS6.parameters <- c("beta","gamma", "betaSi", "betaRi", "gammaSi", "gammaRi", "sig2.pair", "sig2.id", "sig2.yr", "tau.yr", "tau.pair", "tau.id") #,"uid")
+BUGS6.parameters <- c("beta","gamma", "betaSi", "betaRi", "gammaSi", "gammaRi", "sig2.id", "sig2.yr", "tau.yr", "tau.id") #,"uid")
 
 
 
@@ -118,16 +118,16 @@ BUGS6.inits.jags <- function() {list(beta = rnorm(nbeta), #fixed
                                      gammaSi = rnorm(1),
                                      gammaRi = rnorm(2),
                                     # sig.cycle=runif(1), #year
-                                     tau.pair = structure(.Data= c(1, 0, 0, 1), .Dim=c(2, 2)), #runif(1),
+                                    # tau.pair = structure(.Data= c(1, 0, 0, 1), .Dim=c(2, 2)), #runif(1),
                                      tau.id = structure(.Data= c(1.2, 0, 0, 1.2), .Dim=c(2, 2)),
                                      tau.yr = structure(.Data= c(0.9, 0, 0, 0.9), .Dim=c(2, 2)),
                                     .RNG.name=sample(c("base::Super-Duper","base::Wichmann-Hill"),1), .RNG.seed=sample(1:100,1))}
 
 ##### chain parameters #####
 n.c.jags <- no_of_cores # ICS set number of chains = number of cores
-n.a.jags <- 5000 # number of adaptive iterations
+n.a.jags <- 6000 # number of adaptive iterations
 n.b.jags <- 20000 # number of burnin
-n.t.jags <- 100 # thining interval
+n.t.jags <- 200 # thining interval
 n.s.jags <- 1000  # number of samples (i.e. total number of iterations is nb.samples * thinning interval)
 
 
@@ -136,7 +136,7 @@ jagsIODnoRS <- run.jags("DHGLM_BBAL_IODnoRRSexEnvtInt.R", BUGS6.parameters, BUGS
                         sample = n.s.jags, thin = n.t.jags, burnin = n.b.jags, adapt = n.a.jags, method="parallel")
 
 
-if(exists("output.file") == TRUE) {
+if(exists("output_file") == TRUE) {
     save(jagsIODnoRS, file = output_file)
 }
 

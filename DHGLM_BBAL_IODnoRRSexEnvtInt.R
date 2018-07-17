@@ -32,15 +32,6 @@ model {
      uyr[l, 1:2] ~ dmnorm(zeroyr[], tau.yr[, ])
   }
     
-  ###PairBand
- # updated priors for pair effect included now both in mean and variance part
-  tau.pair[1:2, 1:2] ~ dwish(mat.pair[, ], 3) #wishart prior on the precision matrix
-  sig2.pair[1:2, 1:2] <- inverse(tau.pair[, ]) #conversion to a variance matrix
-  for (l in 1:n.Pairs) {
-     upair[l, 1:2] ~ dmnorm(zerop[], tau.pair[, ])
-  }
-  
-  
    
   ###indivual identity
   tau.id[1:2, 1:2] ~ dwish(mat.id[, ], 3) #wishart prior on the precision matrix
@@ -58,14 +49,14 @@ model {
     y.hat[i] <-
       beta[1] + beta[2] * Sexe[i] + beta[3] * Age[i] + beta[4] * Brooding[i] + beta[5] * Preponte[i]
       + (beta[6] + betaSi[1] * Sexe[i] + betaRi[1] * Brooding[i] + betaRi[2] * Preponte[i] ) * IODAnnual[i] 
-        + uid[id[i], 1] + upair[PairBand[i], 1] + uyr[Cycle[i], 1]
+        + uid[id[i], 1] + uyr[Cycle[i], 1]
     
     #model for the variance
     tau.y[i] <- 1 / sigma2[i] #expressing the model as variance instead of a precision
 
     log(sigma2[i])  <- gamma[1] + gamma[2] * Sexe[i] + gamma[3] * Age[i] + gamma[4] * Brooding[i] + gamma[5] * Preponte[i]
 	+ (gamma[6] + gammaSi[1] * Sexe[i] + gammaRi[1] * Brooding[i] + gammaRi[2] * Preponte[i]) * IODAnnual[i]
-	+ uid[id[i], 2] + upair[PairBand[i], 2] + uyr[Cycle[i], 2]
+	+ uid[id[i], 2] + uyr[Cycle[i], 2]
   }
    
 }
