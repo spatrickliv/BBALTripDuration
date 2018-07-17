@@ -17,8 +17,6 @@ I <- is.na(data$ids) |
   is.na(data$Tripdur) |
   is.na(data$Age) |
   is.na(data$IODAnnual) 
-
-
  
 data <- data[!I,]
 
@@ -31,25 +29,61 @@ data$Stade <- relevel(data$Stade, ref = "INCUBATION")
 db <- data.frame(Cycle = sort(unique(data$Cycle)), Cycle.n = 1:length(unique(data$Cycle)))
 data$Cycle.n <- db$Cycle.n[match(data$Cycle,db$Cycle)]
 
-Xm <- unname( model.matrix(~ 1 + Age + (Sexe + Stade) * IODAnnual, data))
-Xv <- unname( model.matrix(~ 1 + Age + (Sexe + Stade) * IODAnnual, data))
-
 ##### creating BUGS datalist #####
-stan.data <- list(
-    Km = ncol(Xm),
-    Kv = ncol(Xv),
-    N = nrow(Xm),
-    nid = length(unique(data$ids)),
-    ## npr = length(unique(data$PairID)),
-    nyr = length(unique(data$Cycle)),
-    id = as.numeric(droplevels(data$ids)),
-    ## pr = as.numeric(droplevels(as.factor(data$PairID))),
-    yr = data$Cycle.n,
-    Xm = Xm,
-    Xv = Xv,
-    Y = data$Tripdur
-)
+mk.stan.data <- function(Xm, Xv, dat){
+    out <- list(
+        Km = ncol(Xm),
+        Kv = ncol(Xv),
+        N = nrow(Xm),
+        nid = length(unique(dat$ids)),
+        ## npr = length(unique(data$PairID)),
+        nyr = length(unique(dat$Cycle)),
+        id = as.numeric(droplevels(dat$ids)),
+        ## pr = as.numeric(droplevels(as.factor(data$PairID))),
+        yr = dat$Cycle.n,
+        Xm = unname(Xm),
+        Xv = unname(Xv),
+        Y = dat$Tripdur
+    )
+    out
+}
+
+Xm.full <- model.matrix(~ 1 + Age + (Sexe + Stade) * IODAnnual, data)
+Xv.full <- model.matrix(~ 1 + Age + (Sexe + Stade) * IODAnnual, data)
+stan.data.full <- mk.stan.data(Xm.full,Xv.full,data)
+
+dh_full <- stan(file="Stan_Model_nopair.stan",
+                  data = stan.data.full,
+                  iter = 5000,
+                  warmup = 3000,
+                  thin = 5,
+                  chains = 5,
+                control = list(adapt_delta = 0.96))
+save(dh_full,file="dhglm_full.rda")
+
+load("dhglm_full.rda")
+
+params <- c("beta","gamma","sigma_id","sigma_yr","L_O_id","L_O_yr", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
+params2 <- c("beta","gamma", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
+
+results <- summary(dh_full, pars = params, probs = c(0.025, 0.5, 0.975))$summary
+rownames(results)[1:(ncol(Xm.full)+ncol(Xv.full))] <- c(paste0("b_", colnames(Xm.full)),
+                            paste0("g_", colnames(Xv.full)))
+print(results, digits = 2)
+
+stan_plot(dh_full, show_density = TRUE, pars=params2) + ggtitle("Posterior distributions model QG")
+stan_dens(dh_full, pars=params2) + ggtitle("Posterior distributions model QG")
 
 
-dh_nopair <- stan(file="Stan_Model_nopair.stan", data = stan.data, iter = 4000, warmup = 2000, thin = 1, chains = 4, control = list(adapt_delta = 0.95))
-save(dh_nopair,file="dhglm_nopair.rda")
+Xm.sig <- model.matrix(~ 1 +  Sexe + Stade * IODAnnual, data)
+Xv.sig <- model.matrix(~ 1 + Age + Sexe + Stade + IODAnnual, data)
+stan.data.sig <- mk.stan.data(Xm.sig, Xv.sig, data)
+
+dh_sig <- stan(file="Stan_Model_nopair.stan",
+                  data = stan.data.sig,
+                  iter = 5000,
+                  warmup = 3000,
+                  thin = 5,
+                  chains = 5,
+                control = list(adapt_delta = 0.96))
+save(dh_sig,file="dhglm_sig.rda")

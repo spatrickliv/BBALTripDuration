@@ -1,0 +1,111 @@
+---
+title: |
+  | **BBAL trip duration**
+  | *DHGLM fitted with Stan*
+  | Results
+  
+author: Julien Martin
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document
+
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overview
+This script is for investigating variation in consistency of trip duration in Black-browed albatroses using a DHGLM approach 
+
+Data collected by _Sam Patrick_.
+
+Analysis by _Julien Martin_ & _Sam Patrick_.
+
+## Libraries
+
+Various libraries to be installed and loaded allowing data manipulation model fitting and plotting
+
+```{r loadLibs, message=FALSE, warning=FALSE}
+library(rstan)
+library(ggplot2)
+library(bayesplot)
+```
+
+#  Model
+## Loading the data
+
+```{r data}
+data <- read.table("bugsdata5.txt")
+## no_of_cores <- 3
+
+data <- subset(data, Tripdur < 600) # remove trips longer than 600 hours
+### removing NAs
+I <- is.na(data$ids) |
+  is.na(data$Sexe) |
+  is.na(data$Cycle) |
+  is.na(data$CycleBand) |
+  is.na(data$Stade) |
+  is.na(data$Tripdur) |
+  is.na(data$Age) |
+  is.na(data$IODAnnual) 
+ 
+data <- data[!I,]
+
+### scaling and centering
+data$Tripdur <- as.numeric(scale(sqrt(data$Tripdur)))
+data$Age <- as.numeric(scale(data$Age))
+data$IODAnnual <- as.numeric(scale(data$IODAnnual))
+data$Stade <- relevel(data$Stade, ref = "INCUBATION")
+
+db <- data.frame(Cycle = sort(unique(data$Cycle)), Cycle.n = 1:length(unique(data$Cycle)))
+data$Cycle.n <- db$Cycle.n[match(data$Cycle,db$Cycle)]
+
+```
+
+
+
+```{r results_full}
+
+load("dhglm_full.rda")
+Xm.full <- model.matrix(~ 1 + Age + (Sexe + Stade) * IODAnnual, data)
+Xv.full <- model.matrix(~ 1 + Age + (Sexe + Stade) * IODAnnual, data)
+params <- c("beta","gamma","sigma_id","sigma_yr","L_O_id","L_O_yr", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
+params2 <- c("beta","gamma", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
+
+results.full <- summary(dh_full, pars = params, probs = c(0.025, 0.5, 0.975))$summary
+rownames(results.full)[1:(ncol(Xm.full)+ncol(Xv.full))] <-
+    c(paste0("b_", colnames(Xm.full)),
+      paste0("g_", colnames(Xv.full))
+      )
+print(results.full, digits = 2)
+
+stan_plot(dh_full, show_density = TRUE, pars=params2) + ggtitle("Posterior distributions full model")
+stan_dens(dh_full, pars=params2) + ggtitle("Posterior distributions full model")
+
+```
+
+#  Model with only significant effect
+
+
+```{r results_sig}
+
+load("dhglm_sig.rda")
+Xm.sig <- model.matrix(~ 1 + Sexe + Stade * IODAnnual, data)
+Xv.sig <- model.matrix(~ 1 + Age + Sexe + Stade + IODAnnual, data)
+params <- c("beta","gamma","sigma_id","sigma_yr","L_O_id","L_O_yr", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
+params2 <- c("beta","gamma", "Sigma_id","Sigma_yr","Omega_id[1,2]","Omega_yr[1,2]")
+
+results.sig <- summary(dh_sig, pars = params, probs = c(0.025, 0.5, 0.975))$summary
+rownames(results.sig)[1:(ncol(Xm.sig)+ncol(Xv.sig))] <-
+    c(paste0("b_", colnames(Xm.sig)),
+      paste0("g_", colnames(Xv.sig))
+      )
+print(results.sig, digits = 2)
+
+stan_plot(dh_sig, show_density = TRUE, pars=params2) + ggtitle("Posterior distributions full model")
+stan_dens(dh_sig, pars = params2) + ggtitle("Posterior distributions full model")
+
+```
+

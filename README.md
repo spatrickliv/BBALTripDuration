@@ -1,5 +1,9 @@
 # NEWS
 
+* 17-07-2018: I ran the most complex model using stan and then ran the model including only significant fixed effects
+
+* 16-07-2018: I updated the folder with code for using stan
+
 * 02-04-2018: I made quite a few modificaitons since last time, and I need to use commits better to track them all. I cleaned the code in both file and renamed them. I updated the model with PairBand and year as random effects, modified the coding of interactions to get better convergence. As it is the model seem to run well but I won't run more tests before we have the final data.
 
 # TODO list for the DHGLM model
