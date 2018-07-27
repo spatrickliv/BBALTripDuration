@@ -4,8 +4,13 @@ rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
 ###### data ######
-data <- read.table("bugsdata5.txt")
+## data <- read.table("bugsdata5.txt")
 ## no_of_cores <- 3
+##### Set to read in raw data files
+dataGLS<- 
+dataIOD<-
+dataIndiv<-
+
 
 data <- subset(data, Tripdur < 600) # remove trips longer than 600 hours
 ### removing NAs
