@@ -1,3 +1,4 @@
+##this is an old script ## 
 
 model {
   #priors
